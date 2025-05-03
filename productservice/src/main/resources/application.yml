@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: productservice
+
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecomsense_db
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update  # or validate/create/drop depending on env
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+inventory:
+  base-url: http://localhost:8083  # Static config to call inventory-service
+
