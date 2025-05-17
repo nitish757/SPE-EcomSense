@@ -1,0 +1,59 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: forecast_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  inventoryservice:
+    build:
+      context: ./inventoryservice
+    image: nitish123/inventory-service:1.0.0
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/forecast_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 12345
+      JWT_SECRET: your_jwt_secret_here
+      INVENTORY_BASE_URL: http://inventoryservice:8083
+    depends_on:
+      - postgres
+
+  productservice:
+    build:
+      context: ./productservice
+    image: nitish757/product-service:1.0.0
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/forecast_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 12345
+      JWT_SECRET: your_jwt_secret_here
+      INVENTORY_BASE_URL: http://productservice:8082
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./Frontend
+    environment:
+  	- VITE_PRODUCT_API_URL=http://productservice:8082
+  	- VITE_INVENTORY_API_URL=http://inventoryservice:8083
+    image: nitish757/frontend:1.0.0
+    ports:
+      - "5173:80"
+    depends_on:
+      - inventoryservice
+      - productservice
+
+volumes:
+  postgres_data:
+
