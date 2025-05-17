@@ -53,4 +53,9 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<Product> restoreProduct(@PathVariable String id) {
+        return ResponseEntity.ok(productService.restoreProduct(id));
+    }
 }

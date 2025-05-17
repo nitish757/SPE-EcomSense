@@ -14,20 +14,17 @@ public class DailyInventorySnapshot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String productId;
-    private String storeId;
-    private LocalDate snapshotDate;
-    private int quantityAtBod;
-    private int quantityAtEod;
-    private double unitPrice;
-    private double demandForecast;
-    private String weatherCondition;
-    private boolean holidayPromotion;
-    private String seasonality;
-    private double competitorPricing;
-    private double discount;
-//    private int salesQuantity;
-//    private double salesAmount;
-//    private int promotion;
-//    private double footTraffic;
+    private LocalDate date;                  // corresponds to 'date' column
+    private String storeId;                  // corresponds to 'store_id'
+    private String productId;                // corresponds to 'product_id'
+    private int inventoryLevel;              // corresponds to 'inventory_level'
+    private int unitsSold;                   // corresponds to 'units_sold'
+    private int unitsOrdered;                // corresponds to 'units_ordered'
+    private double demandForecast;           // corresponds to 'demand_forecast'
+    private double price;                    // corresponds to 'price'
+    private double discount;                 // corresponds to 'discount'
+    private String weatherCondition;         // corresponds to 'weather_condition'
+    private boolean holidayPromotion;        // corresponds to 'holiday_promotion'
+    private double competitorPricing;        // corresponds to 'competitor_pricing'
+    private String seasonality;              // corresponds to 'seasonality'
 }

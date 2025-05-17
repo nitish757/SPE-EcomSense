@@ -9,8 +9,12 @@ function App() {
   return (
     <Router>
       <div className="d-flex flex-column min-vh-100 w-100 bg-light">
-        <nav>
-          <Link to="/">Products</Link> | <Link to="/inventory">Inventory</Link> | <Link to="/forecasts">Forecasts</Link>
+        <nav className="d-flex justify-content-center align-items-center fs-3">
+            <Link to="/" className="mx-5">Products</Link>
+            <span className="fs-5 text-muted">|</span>
+            <Link to="/inventory" className="mx-5">Inventory</Link>
+            <span className="fs-5 text-muted">|</span>
+            <Link to="/forecasts" className="mx-5">Forecasts</Link>
         </nav>
         <div style={{ flex: 1, padding: '1rem' }}>
           <Routes>

@@ -24,7 +24,10 @@ public class ProductService {
     }
 
     public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
+
+//        return productRepository.findByCategory(category);
+        return productRepository.findByCategoryIgnoreCaseContaining(category);
+        // or use searchByCategory(category);
     }
 
 //    public Product createProduct(Product product) {
@@ -63,5 +66,12 @@ public class ProductService {
         product.setActive(false);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
+    }
+
+    public Product restoreProduct(String id) {
+        Product product = getProductById(id);
+        product.setActive(true);
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
     }
 }

@@ -15,22 +15,33 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping("/snapshots")
-    public List<DailyInventorySnapshot> getSnapshots() {
-        return inventoryService.getSnapshots();
+    public List<DailyInventorySnapshot> getLatestSnapshots(
+            @RequestParam(defaultValue = "50") int limit) {
+        return inventoryService.getLatestSnapshots(limit);
     }
 
     @PostMapping("/snapshots")
     public DailyInventorySnapshot addSnapshot(@RequestBody DailyInventorySnapshot snapshot) {
-        return inventoryService.saveSnapshot(snapshot);
+        return inventoryService.saveSnap(snapshot);
     }
 
-    @PutMapping("/stock")
-    public void updateStock(
-            @RequestParam String productId,
-            @RequestParam String storeId,
-            @RequestParam int quantityChange,
-            @RequestParam String date // Format: yyyy-MM-dd
-    ) {
-        inventoryService.updateStock(productId, storeId, LocalDate.parse(date), quantityChange);
+    @GetMapping("/year/{year}")
+    public List<DailyInventorySnapshot> getByYear(@PathVariable int year) {
+        return inventoryService.getSnapshotsByYear(year);
+    }
+
+    @GetMapping("/year/{year}/month/{month}")
+    public List<DailyInventorySnapshot> getByYearAndMonth(@PathVariable int year, @PathVariable int month) {
+        return inventoryService.getSnapshotsByYearAndMonth(year, month);
+    }
+
+    @GetMapping("/date/{date}")
+    public List<DailyInventorySnapshot> getByDate(@PathVariable String date) {
+        return inventoryService.getSnapshotsByDate(LocalDate.parse(date));
+    }
+
+    @PostMapping("/newstock")
+    public void addNewStock(@RequestBody List<DailyInventorySnapshot> snapshots) {
+        inventoryService.saveSnapshots(snapshots);
     }
 }
