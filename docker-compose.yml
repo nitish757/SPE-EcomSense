@@ -7,14 +7,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   inventoryservice:
     build:
       context: ./inventoryservice
-    image: nitish123/inventory-service:1.0.0
+    image: nitish123/inventory-service:2.0.0
     ports:
       - "8083:8083"
     environment:
@@ -29,7 +29,7 @@ services:
   productservice:
     build:
       context: ./productservice
-    image: nitish757/product-service:1.0.0
+    image: nitish757/product-service:2.0.0
     ports:
       - "8082:8082"
     environment:
@@ -44,10 +44,13 @@ services:
   frontend:
     build:
       context: ./Frontend
+      args:
+        VITE_PRODUCT_API_URL: http://productservice:8082
+        VITE_INVENTORY_API_URL: http://inventoryservice:8083
     environment:
-  	- VITE_PRODUCT_API_URL=http://productservice:8082
-  	- VITE_INVENTORY_API_URL=http://inventoryservice:8083
-    image: nitish757/frontend:1.0.0
+      - VITE_PRODUCT_API_URL=http://localhost:8082
+      - VITE_INVENTORY_API_URL=http://localhost:8083
+    image: nitish757/frontend:2.0.0
     ports:
       - "5173:80"
     depends_on:

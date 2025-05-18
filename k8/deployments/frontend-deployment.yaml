@@ -1,0 +1,25 @@
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: nitish757/frontend:2.0.0
+          ports:
+            - containerPort: 80
+          env:
+            - name: VITE_PRODUCT_API_URL
+              value: http://productservice:8082
+            - name: VITE_INVENTORY_API_URL
+              value: http://inventoryservice:8083

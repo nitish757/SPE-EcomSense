@@ -1,0 +1,10 @@
+# product-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: productservice
+spec:
+  ports:
+    - port: 8082
+  selector:
+    app: productservice

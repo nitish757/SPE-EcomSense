@@ -9,9 +9,9 @@ spring:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/forecast_db
-    username: postgres
-    password: 12345
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/forecast_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:12345}
   jpa:
     hibernate:
       ddl-auto: update  # or validate/create/drop depending on env
@@ -23,5 +23,5 @@ jwt:
   expiration: 86400000
 
 inventory:
-  base-url: http://localhost:8082  # Static config to call inventory-service
+  base-url: http://productservice:8082  # Static config to call inventory-service
 
