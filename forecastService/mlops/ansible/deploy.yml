@@ -1,0 +1,34 @@
+---
+- name: Redeploy Forecast API to Kubernetes
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    namespace: "{{ lookup('env', 'K8S_NAMESPACE') | default('mlops') }}"
+    k8s_base_path: "k8/"  # Folder where all K8s YAMLs are stored
+
+  tasks:
+    - name: Ensure namespace exists
+      command: kubectl apply -f {{ k8s_base_path }}namespace.yaml
+
+    - name: Apply ConfigMap
+      command: kubectl apply -f {{ k8s_base_path }}configmap.yaml -n {{ namespace }}
+
+    - name: Apply Service
+      command: kubectl apply -f {{ k8s_base_path }}service.yaml -n {{ namespace }}
+
+    - name: Apply Deployment
+      command: kubectl apply -f {{ k8s_base_path }}deployment.yaml -n {{ namespace }}
+
+    - name: Apply Ingress
+      command: kubectl apply -f {{ k8s_base_path }}ingress.yaml -n {{ namespace }}
+
+    - name: Wait for deployment rollout
+      command: kubectl rollout status deployment/forecast-api -n {{ namespace }}
+      args:
+        chdir: "{{ k8s_base_path }}"
+      retries: 10
+      delay: 5
+      register: rollout_result
+      until: rollout_result is success
+      ignore_errors: no
