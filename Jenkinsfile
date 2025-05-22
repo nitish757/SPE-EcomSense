@@ -76,30 +76,20 @@ stage('Deploy to Kubernetes') {
             withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
                 dir('k8s') {
                     echo "Applying namespace..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f namespace.yml"
 
-                    echo "Applying ConfigMap..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f config/"
-
-                    echo "Applying Postgres..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f postgres/"
-
-                    echo "Applying Inventory Service..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f inventory-service/"
-
-                    echo "Applying Product Service..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f product-service/"
-
-                    echo "Applying Frontend..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f frontend/"
-
-                    echo "Applying Ingress..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f ingress/"
-
-                    echo "Applying HPA..."
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-inventory.yml"
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-product.yml"
-                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-frontend.yml"
+                    // Always wrap \$KUBECONFIG_FILE in quotes
+                    sh """
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f namespace.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f config/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f postgres/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f inventory-service/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f product-service/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f frontend/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ingress/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
+                    """
                 }
             }
         }
