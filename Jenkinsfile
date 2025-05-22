@@ -12,7 +12,7 @@ pipeline {
     
     environment {
         DOCKER_HUB_CRED = credentials('DockerHubCred') // Jenkins credential ID
-        KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
+        // KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
         NAMESPACE = 'ecomsense'
     }
 
@@ -70,48 +70,44 @@ pipeline {
         }
 
         // STAGE 5: Deploy to Kubernetes
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                   // Use withCredentials to bind the kubeconfig file
-                  withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-                    def KUBECONFIG_PATH = "$KUBECONFIG_FILE"  // This points to the temp file location
+stage('Deploy to Kubernetes') {
+    steps {
+        script {
+            withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                dir('k8s') {
+                    echo "Kubeconfig path: ${KUBECONFIG_FILE}"
+                    sh "cat \$KUBECONFIG_FILE" // Optional: debug content
 
-                    // Apply Kubernetes manifests
-                    dir('k8s') {
-                        sh "cat \${KUBECONFIG_PATH}"
-                        echo "Applying namespace..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f namespace.yml'
+                    echo "Applying namespace..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f namespace.yml"
 
-                        echo "Applying CongigMap..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f config/'
-                        
-                        echo "Applying Postgres..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f postgres/'
+                    echo "Applying ConfigMap..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f config/"
 
-                        echo "Applying Inventory Service..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f inventory-service/'
+                    echo "Applying Postgres..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f postgres/"
 
-                        echo "Applying Product Service..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f product-service/'
+                    echo "Applying Inventory Service..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f inventory-service/"
 
-                        echo "Applying Frontend..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f frontend/'
+                    echo "Applying Product Service..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f product-service/"
 
-                        echo "Applying Ingress..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f ingress/'
+                    echo "Applying Frontend..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f frontend/"
 
-                        echo "Applying HPA..."
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-inventory.yml'
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-product.yml'
-                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-frontend.yml'
-                        
-                    }
-                  }
+                    echo "Applying Ingress..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f ingress/"
+
+                    echo "Applying HPA..."
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-inventory.yml"
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-product.yml"
+                    sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f hpa/hpa-frontend.yml"
                 }
             }
         }
-
+    }
+}
         // STAGE 6: Run Integration Tests (Optional)
         stage('Run Integration Tests') {
             when {
