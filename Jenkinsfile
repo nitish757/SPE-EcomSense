@@ -6,7 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_HUB_CRED = credentials('docker-hub') // Jenkins credential ID
+        DOCKER_HUB_CRED = credentials('DockerHubCred') // Jenkins credential ID
         KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
         NAMESPACE = 'ecomsense'
     }
