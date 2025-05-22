@@ -72,11 +72,11 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                   // Load kubeconfig from Jenkins credentials
-                   def KUBECONFIG_PATH = "${env.HOME}/config"
+                    // Load kubeconfig from Jenkins credentials
+                    def KUBECONFIG_PATH = "${env.HOME}/config"
             
-                    // Read the file content
-                    writeFile file: KUBECONFIG_PATH, text: readFile env.KUBECONFIG_USR
+                    // Write kubeconfig to disk
+                    writeFile file: KUBECONFIG_PATH, text: credentials('kubeconfig')
 
                     // Load kubeconfig from Jenkins credentials
                     // writeFile file: "${env.HOME}/config", text: env.KUBECONFIG_USR
