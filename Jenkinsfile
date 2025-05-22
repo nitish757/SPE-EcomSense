@@ -30,7 +30,7 @@ pipeline {
             steps {
                 dir('inventoryservice') {
                     withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        sh 'mvn clean package -DskipTests'
+                        // sh 'mvn clean package -DskipTests'
                         sh "docker build -t nitish757/inventory-service:${IMAGE_TAG} ."
                         sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                         sh 'docker push nitish757/inventory-service:$IMAGE_TAG'
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 dir('productservice') {
                     withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        sh 'mvn clean package -DskipTests'
+                        // sh 'mvn clean package -DskipTests'
                         sh "docker build -t nitish757/product-service:${IMAGE_TAG} ."
                         sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                         sh 'docker push nitish757/product-service:$IMAGE_TAG'
