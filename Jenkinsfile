@@ -58,7 +58,8 @@ pipeline {
             steps {
                 dir('frontend') {
                     withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        sh 'npm install && npm run build'
+                        sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm install'
+                        sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm run build'
                         sh "docker build -t nitish757/frontend:${IMAGE_TAG} ."
                         sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                         sh 'docker push nitish757/frontend:$IMAGE_TAG'
