@@ -1,49 +1,126 @@
 pipeline {
     agent any
+
+    environment {
+        DOCKER_HUB_CRED = credentials('docker-hub') // Jenkins credential ID
+        KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
+        NAMESPACE = 'ecomsense'
+    }
+
     stages {
-        stage('Checkout') {
+        // STAGE 1: Clone Repository
+        stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/fakeuser/EcomSense.git '
+                git branch: 'main',
+                     url: 'https://github.com/nitish757/SPE-EcomSense.git '
             }
         }
 
-        stage('Build Backend') {
+        // STAGE 2: Build Inventory Service
+        stage('Build Inventory Service') {
             steps {
-                sh 'cd backend && mvn clean package'
+                dir('inventoryservice') {
+                    sh 'mvn clean package'
+                    sh 'docker build -t nitish757/inventory-service:4.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/inventory-service:4.0.0'
+                }
             }
         }
 
+        // STAGE 3: Build Product Service
+        stage('Build Product Service') {
+            steps {
+                dir('productservice') {
+                    sh 'mvn clean package'
+                    sh 'docker build -t nitish757/product-service:3.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/product-service:3.0.0'
+                }
+            }
+        }
+
+        // STAGE 4: Build Frontend
         stage('Build Frontend') {
             steps {
-                sh 'cd frontend && npm install && npm run build'
+                dir('frontend') {
+                    sh 'npm install && npm run build'
+                    sh 'docker build -t nitish757/frontend:5.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/frontend:5.0.0'
+                }
             }
         }
 
-        stage('Build Docker Images') {
+        // STAGE 5: Deploy to Kubernetes
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    docker.build("ecom-backend:${env.BUILD_NUMBER}", "./backend")
-                    docker.build("ecom-frontend:${env.BUILD_NUMBER}", "./frontend")
+                    // Load kubeconfig from Jenkins credentials
+                    writeFile file: "${env.HOME}/config", text: env.KUBECONFIG_USR
 
-                    docker.withRegistry('https://registry.hub.docker.com ', 'dockerhub-credentials') {
-                        docker.image("ecom-backend:${env.BUILD_NUMBER}").push()
-                        docker.image("ecom-frontend:${env.BUILD_NUMBER}").push()
+                    // Apply Kubernetes manifests
+                    dir('k8s') {
+                        echo "Applying namespace..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f namespace.yml'
+
+                        echo "Applying CongigMap..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f config/'
+                        
+                        echo "Applying Postgres..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f postgres/'
+
+                        echo "Applying Inventory Service..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f inventory-service/'
+
+                        echo "Applying Product Service..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f product-service/'
+
+                        echo "Applying Frontend..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f frontend/'
+
+                        echo "Applying Ingress..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f ingress/'
+
+                        echo "Applying HPA..."
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-inventory.yml'
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-product.yml'
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-frontend.yml'
+                        
                     }
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        // STAGE 6: Run Integration Tests (Optional)
+        stage('Run Integration Tests') {
+            when {
+                expression { env.DEPLOY_TO_K8S == "true" }
+            }
             steps {
-                sh 'kubectl apply -f k8s/backend-deployment.yaml'
-                sh 'kubectl apply -f k8s/frontend-deployment.yaml'
+                dir('test/e2e') {
+                    sh 'npm install'
+                    sh 'npm test' // Or use Newman if testing via Postman collection
+                }
             }
         }
 
-        stage('Notify Success') {
+        // STAGE 7: Clean Up Old Images
+        stage('Clean Up') {
             steps {
-                slackSend channel: '#jenkins', color: '#00FF00', message: "✅ EcomSense Pipeline SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+                sh 'docker system prune -af'
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful!"
+            slackSend channel: '#deploy', message: "✅ Production deployment succeeded"
+        }
+        failure {
+            echo "❌ Deployment failed"
+            slackSend channel: '#deploy', message: "❌ Deployment failed"
         }
     }
 }
