@@ -84,30 +84,30 @@ pipeline {
                     // Apply Kubernetes manifests
                     dir('k8s') {
                         echo "Applying namespace..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f namespace.yml'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f namespace.yml'
 
                         echo "Applying CongigMap..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f config/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f config/'
                         
                         echo "Applying Postgres..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f postgres/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f postgres/'
 
                         echo "Applying Inventory Service..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f inventory-service/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f inventory-service/'
 
                         echo "Applying Product Service..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f product-service/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f product-service/'
 
                         echo "Applying Frontend..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f frontend/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f frontend/'
 
                         echo "Applying Ingress..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f ingress/'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f ingress/'
 
                         echo "Applying HPA..."
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-inventory.yml'
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-product.yml'
-                        sh "kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-frontend.yml'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-inventory.yml'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-product.yml'
+                        sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-frontend.yml'
                         
                     }
                 }
