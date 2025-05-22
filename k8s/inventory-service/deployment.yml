@@ -18,6 +18,13 @@ spec:
         image: nitish757/inventory-service:3.0.0
         ports:
         - containerPort: 8083
+        resources:
+         limits:
+          cpu: "500m"
+          memory: "512Mi"
+         requests:
+          cpu: "100m"
+          memory: "128Mi"
         env:
          - name: ML_SERVICE_HOST
            value: "ml-service"

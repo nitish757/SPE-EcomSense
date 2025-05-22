@@ -18,6 +18,13 @@ spec:
         image: nitish757/product-service:3.0.0
         ports:
         - containerPort: 8082
+        resources:
+         limits:
+          cpu: "500m"
+          memory: "512Mi"
+         requests:
+          cpu: "100m"
+          memory: "128Mi"
         envFrom:
         - configMapRef:
             name: app-config

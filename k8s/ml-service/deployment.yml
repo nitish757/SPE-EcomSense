@@ -18,3 +18,10 @@ spec:
         image: mbashish/forecastservice:v3
         ports:
         - containerPort: 8000
+        resources:
+         limits:
+          cpu: "500m"
+          memory: "512Mi"
+         requests:
+          cpu: "100m"
+          memory: "128Mi"
