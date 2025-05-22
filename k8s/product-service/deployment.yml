@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: ecomsense
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+      - name: inventory-service
+        image: nitish757/product-service:3.0.0
+        ports:
+        - containerPort: 8082
+        envFrom:
+        - configMapRef:
+            name: app-config

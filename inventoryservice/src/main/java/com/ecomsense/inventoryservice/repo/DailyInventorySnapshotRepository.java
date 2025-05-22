@@ -23,5 +23,8 @@ public interface DailyInventorySnapshotRepository extends JpaRepository<DailyInv
     List<DailyInventorySnapshot> findByDate(LocalDate date);
 
     List<DailyInventorySnapshot> findAllByOrderByDateDesc(Pageable pageable);
+
+    @Query("SELECT d FROM DailyInventorySnapshot d ORDER BY d.date DESC LIMIT 1")
+    Optional<DailyInventorySnapshot> findLatestByDate();
 }
 

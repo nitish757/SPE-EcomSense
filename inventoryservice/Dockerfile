@@ -3,8 +3,8 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Copy the JAR (adjust name if needed)
-COPY target/*.jar app.jar
+# Copy the JAR file (use exact name)
+COPY target/inventoryservice-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose application port
 EXPOSE 8083

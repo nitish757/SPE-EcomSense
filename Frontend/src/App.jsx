@@ -20,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ProductList />} />
             <Route path="/inventory" element={<InventoryList />} />
+            <Route path="/forecasts" element={<ForecastChart />} />
           </Routes>
         </div>
       </div>

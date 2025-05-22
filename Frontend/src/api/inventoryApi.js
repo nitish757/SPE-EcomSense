@@ -29,6 +29,11 @@ export const getInventorySnapshots = async () => {
   return res.data;
 };
 
+export const addInventorySnapshot = async (snapshots) => {
+  const res = await api.post('/api/inventory/newstock', snapshots);
+  return res.data;
+};
+
 export const getInventorySnapshotsByYear = async (year) => {
   const res = await api.get(`/api/inventory/year/${year}`);
   return res.data;
@@ -36,5 +41,10 @@ export const getInventorySnapshotsByYear = async (year) => {
 
 export const getInventorySnapshotsByYearAndMonth = async (year, month) => {
   const res = await api.get(`/api/inventory/year/${year}/month/${month}`);
+  return res.data;
+};
+
+export const predictLatest = async () => {
+  const res= await api.get(`/predict/latest`);
   return res.data;
 };

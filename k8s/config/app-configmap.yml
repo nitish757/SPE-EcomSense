@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ecomsense
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/forecast_db"
+  SPRING_DATASOURCE_USERNAME: "postgres"
+  SPRING_DATASOURCE_PASSWORD: "12345"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+
+  INVENTORY_SERVICE_URL: "http://inventory-service:8083"
+  PRODUCT_SERVICE_URL: "http://product-service:8082"
+  ML_SERVICE_URL: "http://ml-service:8000"
+
+  VITE_INVENTORY_API_URL: "/api/inventory"
+  VITE_PRODUCT_API_URL: "/products"

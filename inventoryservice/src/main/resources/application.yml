@@ -9,14 +9,18 @@ spring:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/forecast_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:12345}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update  # or validate/create/drop depending on env
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+ml:
+  service:
+    host: ${ML_SERVICE_HOST:localhost}
+    port: ${ML_SERVICE_PORT:8000}
 
 jwt:
   secret: ${JWT_SECRET}
