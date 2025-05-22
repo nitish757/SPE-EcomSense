@@ -4,20 +4,15 @@ pipeline {
     triggers {
         githubPush()
     }
-
+    
     environment {
-        // Use credentials from Jenkins
-        DOCKER_HUB_CRED_ID = 'DockerHubCred'
-        KUBECONFIG_CRED_ID = 'kubeconfig'
-
-        // Dynamic image tags based on git commit
-        GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-        IMAGE_TAG = "${GIT_COMMIT}"
+        DOCKER_HUB_CRED = credentials('DockerHubCred') // Jenkins credential ID
+        KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
         NAMESPACE = 'ecomsense'
     }
 
     stages {
-        // 🌐 STAGE: Clone Repository
+        // STAGE 1: Clone Repository
         stage('Clone Repository') {
             steps {
                 git branch: 'main',
@@ -25,94 +20,85 @@ pipeline {
             }
         }
 
-        // ⚙️ STAGE: Build Inventory Service
+        // STAGE 2: Build Inventory Service
         stage('Build Inventory Service') {
             steps {
                 dir('inventoryservice') {
-                    withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        // sh 'mvn clean package -DskipTests'
-                        sh "docker build -t nitish757/inventory-service:${IMAGE_TAG} ."
-                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                        sh 'docker push nitish757/inventory-service:$IMAGE_TAG'
-                    }
+                    // sh 'mvn clean package -DskipTests'
+                    sh 'docker build -t nitish757/inventory-service:4.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/inventory-service:4.0.0'
                 }
             }
         }
 
-        // ⚙️ STAGE: Build Product Service
+        // STAGE 3: Build Product Service
         stage('Build Product Service') {
             steps {
                 dir('productservice') {
-                    withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        // sh 'mvn clean package -DskipTests'
-                        sh "docker build -t nitish757/product-service:${IMAGE_TAG} ."
-                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                        sh 'docker push nitish757/product-service:$IMAGE_TAG'
-                    }
+                    // sh 'mvn clean package -DskipTests'
+                    sh 'docker build -t nitish757/product-service:3.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/product-service:3.0.0'
                 }
             }
         }
 
-        // 🖥 STAGE: Build Frontend
+        // STAGE 4: Build Frontend
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    withCredentials([usernamePassword(credentialsId: "$DOCKER_HUB_CRED_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS']) {
-                        sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm install'
-                        sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm run build'
-                        sh "docker build -t nitish757/frontend:${IMAGE_TAG} ."
-                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                        sh 'docker push nitish757/frontend:$IMAGE_TAG'
-                    }
+                    sh 'npm install'
+                    sh 'npm run build'
+                    sh 'npm install && npm run build'
+                    sh 'docker build -t nitish757/frontend:5.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/frontend:5.0.0'
                 }
             }
         }
 
-        // 🚀 STAGE: Deploy to Kubernetes
+        // STAGE 5: Deploy to Kubernetes
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Write kubeconfig file
+                    // Load kubeconfig from Jenkins credentials
                     writeFile file: "${env.HOME}/config", text: env.KUBECONFIG_USR
 
-                    // Set K8s context
+                    // Apply Kubernetes manifests
                     dir('k8s') {
                         echo "Applying namespace..."
-                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f namespace.yml || true'
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f namespace.yml'
 
-                        echo "Applying ConfigMap..."
+                        echo "Applying CongigMap..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f config/'
-
+                        
                         echo "Applying Postgres..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f postgres/'
 
                         echo "Applying Inventory Service..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f inventory-service/'
-                        sh 'kubectl --kubeconfig=${env.HOME}/config set image deployment/inventory-service inventory-service=nitish757/inventory-service:${IMAGE_TAG} -n ecomsense'
 
                         echo "Applying Product Service..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f product-service/'
-                        sh 'kubectl --kubeconfig=${env.HOME}/config set image deployment/product-service inventory-service=nitish757/product-service:${IMAGE_TAG} -n ecomsense'
 
                         echo "Applying Frontend..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f frontend/'
-                        sh 'kubectl --kubeconfig=${env.HOME}/config set image deployment/frontend frontend=nitish757/frontend:${IMAGE_TAG} -n ecomsense'
 
                         echo "Applying Ingress..."
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f ingress/'
 
                         echo "Applying HPA..."
-                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-frontend.yml'
-                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-product.yml'
                         sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-inventory.yml'
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-product.yml'
+                        sh 'kubectl --kubeconfig=${env.HOME}/config apply -f hpa/hpa-frontend.yml'
                         
-
                     }
                 }
             }
         }
 
-        // 🧪 Optional: Run Integration Tests
+        // STAGE 6: Run Integration Tests (Optional)
         stage('Run Integration Tests') {
             when {
                 expression { env.DEPLOY_TO_K8S == "true" }
@@ -120,12 +106,12 @@ pipeline {
             steps {
                 dir('test/e2e') {
                     sh 'npm install'
-                    sh 'npm test' // or use Newman if using Postman collection
+                    sh 'npm test' // Or use Newman if testing via Postman collection
                 }
             }
         }
 
-        // 🧹 STAGE: Clean Up Old Images
+        // STAGE 7: Clean Up Old Images
         stage('Clean Up') {
             steps {
                 sh 'docker system prune -af'
