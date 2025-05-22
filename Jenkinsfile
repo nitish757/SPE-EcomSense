@@ -29,7 +29,7 @@ pipeline {
         stage('Build Inventory Service') {
             steps {
                 dir('inventoryservice') {
-                    // sh 'mvn clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                     sh 'docker build -t nitish757/inventory-service:4.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/inventory-service:4.0.0'
@@ -41,7 +41,7 @@ pipeline {
         stage('Build Product Service') {
             steps {
                 dir('productservice') {
-                    // sh 'mvn clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                     sh 'docker build -t nitish757/product-service:3.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/product-service:3.0.0'
