@@ -79,6 +79,7 @@ pipeline {
 
                     // Apply Kubernetes manifests
                     dir('k8s') {
+                        sh "cat \${KUBECONFIG_PATH}"
                         echo "Applying namespace..."
                         sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f namespace.yml'
 
