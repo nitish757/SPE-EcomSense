@@ -106,6 +106,7 @@ pipeline {
                         sh 'kubectl --kubeconfig=${KUBECONFIG_PATH} apply -f hpa/hpa-frontend.yml'
                         
                     }
+                  }
                 }
             }
         }
