@@ -73,14 +73,9 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Load kubeconfig from Jenkins credentials
-                    def KUBECONFIG_PATH = "${env.HOME}/config"
-            
-                    // Write kubeconfig to disk
-                    writeFile file: KUBECONFIG_PATH, text: credentials('kubeconfig')
-
-                    // Load kubeconfig from Jenkins credentials
-                    // writeFile file: "${env.HOME}/config", text: env.KUBECONFIG_USR
+                   // Use withCredentials to bind the kubeconfig file
+                  withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    def KUBECONFIG_PATH = "$KUBECONFIG_FILE"  // This points to the temp file location
 
                     // Apply Kubernetes manifests
                     dir('k8s') {
