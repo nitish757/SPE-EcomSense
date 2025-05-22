@@ -51,7 +51,7 @@ pipeline {
         // STAGE 4: Build Frontend
         stage('Build Frontend') {
             steps {
-                dir('frontend') {
+                dir('Frontend') {
                     sh 'ls'
                     sh 'npm install'
                     sh 'npm run build'
@@ -60,7 +60,7 @@ pipeline {
         }
         stage('Build Frontend Docker Image') {
             steps {
-                dir('frontend') {
+                dir('Frontend') {
                     sh 'docker build -t nitish757/frontend:5.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/frontend:5.0.0'
