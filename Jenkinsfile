@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "nodejs" // Tool name must match the one defined in Jenkins > Tools > NodeJS
+    }
+    
     triggers {
         githubPush()
     }
@@ -46,12 +50,12 @@ pipeline {
 
         // STAGE 4: Build Frontend
         stage('Build Frontend') {
-        steps {
-            dir('frontend') {
-                sh 'npm install'
-                sh 'npm run build'
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
-        }
         }
         stage('Build Frontend Docker Image') {
             steps {
