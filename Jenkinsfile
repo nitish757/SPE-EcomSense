@@ -75,9 +75,6 @@ stage('Deploy to Kubernetes') {
         script {
             withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
                 dir('k8s') {
-                    echo "Kubeconfig path: ${KUBECONFIG_FILE}"
-                    sh "cat \$KUBECONFIG_FILE" // Optional: debug content
-
                     echo "Applying namespace..."
                     sh "kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f namespace.yml"
 
