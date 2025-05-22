@@ -48,8 +48,8 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
-                    sh 'npm run build'
+                    sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm install'
+                    sh 'docker run --rm -v ${PWD}:/app -w /app node:18-alpine npm run build'
                     sh 'npm install && npm run build'
                     sh 'docker build -t nitish757/frontend:5.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
