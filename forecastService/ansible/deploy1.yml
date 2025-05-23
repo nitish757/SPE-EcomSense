@@ -4,11 +4,11 @@
   gather_facts: no
 
   vars:
-    repo_url: "https://github.com/mbashish007/ML_OPS.git"
+    repo_url: "https://github.com/nitish757/SPE-EcomSense.git"
     repo_branch: "main"
     clone_dir: "ansible_deploy"
     # namespace: "mlops"
-    k8s_base_path: "ansible_deploy/k8/"
+    k8s_base_path: "ansible_deploy/forecastService/k8/"
   
   pre_tasks:
     - name: Show starting message
