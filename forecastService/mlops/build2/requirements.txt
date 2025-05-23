@@ -1,9 +1,0 @@
-pandas
-numpy
-scikit-learn
-lightgbm
-joblib
-pydantic
-fastapi
-mlflow
-uvicorn
