@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: filebeat
-  namespace: mlops
+  namespace: ecomsense
   labels:
     k8s-app: filebeat
 spec:
