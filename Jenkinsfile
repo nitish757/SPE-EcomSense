@@ -30,7 +30,7 @@ pipeline {
             steps {
                 dir('inventoryservice') {
                     sh 'mvn clean package -DskipTests'
-                    sh 'docker build -t nitish757/inventory-service:4.0.0 .'
+                    sh 'docker build -t mbashish/inventory-service:4.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/inventory-service:4.0.0'
                 }
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 dir('productservice') {
                     sh 'mvn clean package -DskipTests'
-                    sh 'docker build -t nitish757/product-service:3.0.0 .'
+                    sh 'docker build -t mbashish/product-service:3.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/product-service:3.0.0'
                 }
@@ -62,7 +62,7 @@ pipeline {
         stage('Build Frontend Docker Image') {
             steps {
                 dir('Frontend') {
-                    sh 'docker build -t nitish757/frontend:5.0.0 .'
+                    sh 'docker build -t mbashish/frontend:5.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
                     sh 'docker push nitish757/frontend:5.0.0'
                 }
@@ -119,11 +119,11 @@ stage('Deploy to Kubernetes') {
     post {
         success {
             echo "✅ Deployment successful!"
-            slackSend channel: '#deploy', message: "✅ Production deployment succeeded"
+            // slackSend channel: '#deploy', message: "✅ Production deployment succeeded"
         }
         failure {
             echo "❌ Deployment failed"
-            slackSend channel: '#deploy', message: "❌ Deployment failed"
+            // slackSend channel: '#deploy', message: "❌ Deployment failed"
         }
     }
 }
