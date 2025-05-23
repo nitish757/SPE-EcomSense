@@ -19,6 +19,8 @@ pipeline {
         DAG_NAME = "retail_etl"
         DAG_FILE = "./dags/retail_etl.py"
         DAG_TARGET_DIR = "/home/m_b_ashish/forecastService/airflow_v1/dags"
+
+        SUBDIR = "forecastService"
     }
 
     stages {
@@ -208,10 +210,13 @@ pipeline {
         // }
 
         stage('Deploy with Ansible') {
-            steps {
-                echo " Deploying to Kubernetes..."
-                sh "ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_PLAYBOOK} -e namespace=${K8S_NAMESPACE} -e elastic_api_key=${ELASTIC_API_KEY}"
+            dir("${SUBDIR}") {
+                steps {
+                    echo " Deploying to Kubernetes..."
+                    sh "ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_PLAYBOOK} -e namespace=${K8S_NAMESPACE} -e elastic_api_key=${ELASTIC_API_KEY}"
+                }
             }
+            
         }
     }
 
