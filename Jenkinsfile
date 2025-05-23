@@ -80,7 +80,9 @@ pipeline {
             steps {
                 sh 'kubectl rollout status deploy/coredns -n kube-system || true'
                 sh 'kubectl get nodes'
+            }
         }
+            
         // STAGE 5: Deploy to Kubernetes
         stage('Deploy to Kubernetes') {
             steps {
