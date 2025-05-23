@@ -32,7 +32,7 @@ pipeline {
                     sh 'mvn clean package -DskipTests'
                     sh 'docker build -t mbashish/inventory-service:4.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
-                    sh 'docker push nitish757/inventory-service:4.0.0'
+                    sh 'docker push mbashish/inventory-service:4.0.0'
                 }
             }
         }
@@ -44,7 +44,7 @@ pipeline {
                     sh 'mvn clean package -DskipTests'
                     sh 'docker build -t mbashish/product-service:3.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
-                    sh 'docker push nitish757/product-service:3.0.0'
+                    sh 'docker push mbashish/product-service:3.0.0'
                 }
             }
         }
@@ -64,7 +64,7 @@ pipeline {
                 dir('Frontend') {
                     sh 'docker build -t mbashish/frontend:5.0.0 .'
                     sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
-                    sh 'docker push nitish757/frontend:5.0.0'
+                    sh 'docker push mbashish/frontend:5.0.0'
                 }
             }
         }
