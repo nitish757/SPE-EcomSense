@@ -210,13 +210,14 @@ pipeline {
         // }
 
         stage('Deploy with Ansible') {
-            dir("${SUBDIR}") {
-                steps {
+            
+            steps {
+                dir("${SUBDIR}") {
                     echo " Deploying to Kubernetes..."
                     sh "ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_PLAYBOOK} -e namespace=${K8S_NAMESPACE} -e elastic_api_key=${ELASTIC_API_KEY}"
+                
                 }
             }
-            
         }
     }
 
