@@ -1,0 +1,44 @@
+# filebeat-daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+  namespace: mlops
+  labels:
+    k8s-app: filebeat
+spec:
+  selector:
+    matchLabels:
+      k8s-app: filebeat
+  template:
+    metadata:
+      labels:
+        k8s-app: filebeat
+    spec:
+      serviceAccountName: default  # For MVP; better to use RBAC later
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:8.11.3
+          args: [
+            "-c", "/etc/filebeat/filebeat.yaml",
+            "-e"
+          ]
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: filebeat-config
+              mountPath: /etc/filebeat
+
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: filebeat-config
+          configMap:
+            name: filebeat-config

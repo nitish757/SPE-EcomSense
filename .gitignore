@@ -1,0 +1,3 @@
+/forecastService/build2/buildshare
+/forecastService/k8/filebeat/filebeat-configmap.yaml
+forecastService/ansible/ansible_deploy
