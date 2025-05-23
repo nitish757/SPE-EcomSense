@@ -1,0 +1,50 @@
+---
+- name: Ensure target directory exists
+  ansible.builtin.file:
+    path: "/tmp/filebeat"
+    state: directory
+    mode: 0700
+
+- name: Copy filebeat.yaml.j2 template to remote
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/roles/filebeat/templates/filebeat.yaml.j2"
+    dest: "/tmp/filebeat/filebeat.yaml.j2"
+    mode: 0600
+
+- name: Generate filebeat.yaml from template on remote
+  ansible.builtin.template:
+    src: "roles/filebeat/templates/filebeat.yaml.j2"
+    dest: "/tmp/filebeat/filebeat.yaml"
+    mode: 0600
+
+- name: Create ConfigMap YAML on remote
+  ansible.builtin.shell: |
+    kubectl create configmap filebeat-config \
+      --from-file=filebeat.yaml \
+      -n {{ namespace }} \
+      --dry-run=client -o yaml > filebeat-configmap.yaml
+  args:
+    chdir: /tmp/filebeat/
+
+- name: Apply ConfigMap on remote
+  kubernetes.core.k8s:
+    src: /tmp/filebeat/filebeat-configmap.yaml
+    namespace: "{{ namespace }}"
+    kubeconfig: ~/.kube/config
+
+- name: Apply DaemonSet on remote
+  kubernetes.core.k8s:
+    src: "{{ k8s_base_path }}/filebeat/filebeat-daemonset.yaml"
+    namespace: "{{ namespace }}"
+    kubeconfig: ~/.kube/config
+
+- name: Restart Filebeat DaemonSet
+  ansible.builtin.shell: |
+    kubectl rollout restart daemonset/filebeat -n {{ namespace }}
+  args:
+    executable: /bin/bash
+  register: restart_result
+
+- name: Show restart result
+  debug:
+    msg: "{{ restart_result.stdout_lines }}"

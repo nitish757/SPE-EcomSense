@@ -7,13 +7,20 @@ import joblib
 import os
 import tempfile
 import traceback
+import logging
 # Initialize FastAPI
 app = FastAPI(title="Retail Forecast API", debug=True)
 
 # tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://192.168.116.216:5000")
 # print(f"Trying to connect to {tracking_uri}")
 # mlflow.set_tracking_uri(tracking_uri)
-
+# Setup logging
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+     # Filebeat will read this
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Define input schema
 class PredictRequest(BaseModel):
@@ -34,7 +41,10 @@ class PredictRequest(BaseModel):
     units_sold_rollmean_7: float
     units_sold_rollmean_14: float
     units_sold_rollmean_28: float
-
+    day_of_week: int
+    month: int 
+    year: int
+    week_of_year: int
 # Load model + artifacts globally
 class RetailForecastService:
     def __init__(self):
@@ -44,7 +54,7 @@ class RetailForecastService:
         self.load_model_and_artifacts()
 
     def load_model_and_artifacts(self):
-        print("🔄 Downloading champion model from MLflow...")
+        logging.info(" Downloading champion model from MLflow...")
 
         # Get champion model from MLflow
         model_uri = "/app/mlflow_artifacts"
@@ -65,7 +75,7 @@ class RetailForecastService:
             if os.path.exists(path):
                 self.encoders[col] = joblib.load(path)
 
-        print("✅ Model & artifacts loaded.")
+        logging.info(" Model & artifacts loaded.")
 
     # def preprocess(self, req: PredictRequest):
     #     input_df = pd.DataFrame([req.dict()])
@@ -113,8 +123,8 @@ class RetailForecastService:
             try:
                 input_df[col] = encoder.transform(input_df[col].astype(str))
             except Exception as e:
-                print(f"❌ Error encoding column '{col}': {e}")
-                print("🔎 Input values:", input_df[col].tolist())
+                print(f" Error encoding column '{col}': {e}")
+                print(" Input values:", input_df[col].tolist())
                 traceback.print_exc()
                 raise e  # Re-raise after logging
 
@@ -202,16 +212,23 @@ def predict(req: PredictRequest):
         "UnitsSold_rollmean_14": req.units_sold_rollmean_14,
         "UnitsSold_rollmean_28": req.units_sold_rollmean_28,
         # Extra date/time features (fill with dummy or latest values)
-        "DayOfWeek": 1,   # Monday
-        "Month": 1,
-        "Year": 2024,
-        "WeekOfYear": 1
+        # "DayOfWeek": 1,   # Monday
+        # "Month": 1,
+        # "Year": 2024,
+        # "WeekOfYear": 1,
+        "DayOfWeek": req.day_of_week,   # Monday
+        "Month": req.month,
+        "Year": req.year,
+        "WeekOfYear": req.week_of_year
     }])
 
-    print("Before predict ")
+    logging.info(f"Incoming request: {req.dict()}")
+
+    # print("Before predict ")
     # Predict
     preds = forecast_service.predict(df)
-    print(preds)
+    # print(preds)
+    logging.info(f"Prediction result: {preds}")
     return preds
     # return {
     #     "1_day_forecast": float(preds[0]),

@@ -1,0 +1,115 @@
+- name: Who am I?
+  ansible.builtin.shell: whoami
+  register: whoami_out
+  args:
+    executable: /bin/bash
+
+- name: Show whoami output
+  debug:
+    var: whoami_out.stdout
+
+- name: Current directory
+  ansible.builtin.shell: pwd
+  register: pwd_out
+  args:
+    executable: /bin/bash
+
+- name: Show pwd output
+  debug:
+    var: pwd_out.stdout
+
+- name: Start Minikube if not already running
+  shell: |
+    status=$(minikube status)
+    if ! echo "$status" | grep -q "host: Running" || \
+      ! echo "$status" | grep -q "kubelet: Running" || \
+      ! echo "$status" | grep -q "apiserver: Running"; then
+      minikube start --driver=docker
+    else
+      echo "Minikube already fully running"
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Enable metrics-server if not already enabled
+  shell: |
+    if ! minikube addons list | grep -q 'metrics-server.*enabled'; then
+      minikube addons enable metrics-server
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Enable ingress if not already enabled
+  shell: |
+    if ! minikube addons list | grep -q 'ingress.*enabled'; then
+      minikube addons enable ingress
+    fi
+  args:
+    executable: /bin/bash
+
+
+- name: Ensure namespace exists
+  command: kubectl apply -f {{ k8s_base_path }}namespace.yaml
+  register: ns_result
+
+- name: Show namespace apply result
+  debug:
+    var: ns_result.stdout_lines
+
+
+- name: Apply ConfigMap
+  command: kubectl apply -f {{ k8s_base_path }}configMap.yaml -n {{ namespace }}
+  register: config_result
+
+- name: Show configMap result
+  debug:
+    var: config_result.stdout_lines
+
+
+- name: Apply Service
+  command: kubectl apply -f {{ k8s_base_path }}service.yaml -n {{ namespace }}
+  register: svc_result
+
+- name: Show service result
+  debug:
+    var: svc_result.stdout_lines
+
+
+- name: Apply Deployment
+  command: kubectl apply -f {{ k8s_base_path }}deployment.yaml -n {{ namespace }}
+  register: deploy_result
+
+- name: Show deployment result
+  debug:
+    var: deploy_result.stdout_lines
+
+
+- name: Apply Ingress
+  command: kubectl apply -f {{ k8s_base_path }}ingress.yaml -n {{ namespace }}
+  register: ingress_result
+
+- name: Show ingress result
+  debug:
+    var: ingress_result.stdout_lines
+
+- name: Restart forecast-api deployment 
+  command: kubectl rollout restart deployment/forecast-api -n {{ namespace }}
+  register: restart_result
+
+- name: Show rollout restart result
+  debug:
+    var: restart_result.stdout_lines
+
+- name: Wait for deployment rollout
+  command: kubectl rollout status deployment/forecast-api -n {{ namespace }}
+  args:
+    chdir: "{{ k8s_base_path }}"
+  register: rollout_result
+  retries: 10
+  delay: 5
+  until: rollout_result.rc == 0
+  ignore_errors: no
+
+- name: Show rollout result
+  debug:
+    var: rollout_result.stdout_lines

@@ -1,0 +1,22 @@
+---
+- name: Redeploy Forecast API to Kubernetes
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    repo_url: "https://github.com/mbashish007/ML_OPS.git"
+    repo_branch: "main"
+    clone_dir: "ansible_deploy"
+    # namespace: "mlops"
+    k8s_base_path: "ansible_deploy/k8/"
+  
+  pre_tasks:
+    - name: Show starting message
+      debug:
+        msg: "Starting CI/CD deployment"
+
+  roles:
+    - git_clone_repo
+    - k8_deploy
+    - filebeat
+

@@ -1,0 +1,24 @@
+# - name: Ensure parent directory exists
+#   file:
+#     path: "{{ clone_dir }}"
+#     state: directory
+#     mode: '0755'
+
+- name: Remove existing repo directory if exists
+  file:
+    path: "{{ clone_dir }}"
+    state: absent
+
+- name: Debug variables
+  debug:
+    msg: |
+      repo_url: {{ repo_url }}
+      clone_dir: {{ clone_dir }}
+      repo_branch: {{ repo_branch }}
+
+
+- name: Clone repo
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ clone_dir }}"
+    version: "{{ repo_branch }}"

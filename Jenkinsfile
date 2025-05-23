@@ -1,49 +1,129 @@
+
 pipeline {
     agent any
+
+    tools {
+        nodejs "nodejs" // Tool name must match the one defined in Jenkins > Tools > NodeJS
+    }
+    
+    triggers {
+        githubPush()
+    }
+    
+    environment {
+        DOCKER_HUB_CRED = credentials('DockerHubCred') // Jenkins credential ID
+        // KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
+        NAMESPACE = 'ecomsense'
+    }
+
     stages {
-        stage('Checkout') {
+        // STAGE 1: Clone Repository
+        stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/fakeuser/EcomSense.git '
+                git branch: 'main',
+                     url: 'https://github.com/nitish757/SPE-EcomSense.git '
             }
         }
 
-        stage('Build Backend') {
+        // STAGE 2: Build Inventory Service
+        stage('Build Inventory Service') {
             steps {
-                sh 'cd backend && mvn clean package'
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                sh 'cd frontend && npm install && npm run build'
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                script {
-                    docker.build("ecom-backend:${env.BUILD_NUMBER}", "./backend")
-                    docker.build("ecom-frontend:${env.BUILD_NUMBER}", "./frontend")
-
-                    docker.withRegistry('https://registry.hub.docker.com ', 'dockerhub-credentials') {
-                        docker.image("ecom-backend:${env.BUILD_NUMBER}").push()
-                        docker.image("ecom-frontend:${env.BUILD_NUMBER}").push()
-                    }
+                dir('inventoryservice') {
+                    sh 'mvn clean package -DskipTests'
+                    sh 'docker build -t nitish757/inventory-service:4.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/inventory-service:4.0.0'
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        // STAGE 3: Build Product Service
+        stage('Build Product Service') {
             steps {
-                sh 'kubectl apply -f k8s/backend-deployment.yaml'
-                sh 'kubectl apply -f k8s/frontend-deployment.yaml'
+                dir('productservice') {
+                    sh 'mvn clean package -DskipTests'
+                    sh 'docker build -t nitish757/product-service:3.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/product-service:3.0.0'
+                }
             }
         }
 
-        stage('Notify Success') {
+        // STAGE 4: Build Frontend
+        stage('Build Frontend') {
             steps {
-                slackSend channel: '#jenkins', color: '#00FF00', message: "✅ EcomSense Pipeline SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+                dir('Frontend') {
+                    sh 'ls'
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
+        }
+        stage('Build Frontend Docker Image') {
+            steps {
+                dir('Frontend') {
+                    sh 'docker build -t nitish757/frontend:5.0.0 .'
+                    sh 'docker login -u $DOCKER_HUB_CRED_USR -p $DOCKER_HUB_CRED_PSW'
+                    sh 'docker push nitish757/frontend:5.0.0'
+                }
+            }
+        }
+
+        // STAGE 5: Deploy to Kubernetes
+stage('Deploy to Kubernetes') {
+    steps {
+        script {
+            withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                dir('k8s') {
+                    echo "Applying namespace..."
+
+                    // Always wrap \$KUBECONFIG_FILE in quotes
+                    sh """
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f namespace.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f config/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f postgres/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f inventory-service/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f product-service/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f frontend/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ingress/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
+                    """
+                }
+            }
+        }
+    }
+}
+        // STAGE 6: Run Integration Tests (Optional)
+        stage('Run Integration Tests') {
+            when {
+                expression { env.DEPLOY_TO_K8S == "true" }
+            }
+            steps {
+                dir('test/e2e') {
+                    sh 'npm install'
+                    sh 'npm test' // Or use Newman if testing via Postman collection
+                }
+            }
+        }
+
+        // STAGE 7: Clean Up Old Images
+        stage('Clean Up') {
+            steps {
+                sh 'docker system prune -af'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful!"
+            slackSend channel: '#deploy', message: "✅ Production deployment succeeded"
+        }
+        failure {
+            echo "❌ Deployment failed"
+            slackSend channel: '#deploy', message: "❌ Deployment failed"
         }
     }
 }
