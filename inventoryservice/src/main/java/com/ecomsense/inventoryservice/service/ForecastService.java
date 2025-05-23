@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.*;
 
 @Service
@@ -62,6 +63,14 @@ public class ForecastService {
         payload.put("price", snapshot.getPrice());
         payload.put("discount", 0);            // replace with actual if available
         payload.put("competitor_pricing", snapshot.getCompetitorPricing());
+
+        // Time-based engineered features
+        LocalDate date = snapshot.getDate(); // Already a LocalDate
+
+        payload.put("day_of_week", date.getDayOfWeek().getValue()); // Monday=1 ... Sunday=7
+        payload.put("month", date.getMonthValue()); // Jan=1 ... Dec=12
+        payload.put("year", date.getYear());
+        payload.put("week_of_year", date.get(WeekFields.ISO.weekOfYear()));
 
         // Lagged features (you already have these)
         payload.put("units_sold_lag_1", snapshot.getUnitsSold());
