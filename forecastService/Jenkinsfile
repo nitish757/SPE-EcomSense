@@ -30,27 +30,27 @@ pipeline {
             }
         }
 
-        // stage('Check Airflow & MLflow Status') {
-        //     steps {
-        //         script {
-        //             echo " Checking Airflow is reachable..."
-        //             sh '''
-        //                 curl -f http://localhost:8090/health || {
-        //                     echo " Airflow is not running."
-        //                     exit 1
-        //                 }
-        //             '''
+        stage('Check Airflow & MLflow Status') {
+            steps {
+                script {
+                    // echo " Checking Airflow is reachable..."
+                    // sh '''
+                    //     curl -f http://localhost:8090/health || {
+                    //         echo " Airflow is not running."
+                    //         exit 1
+                    //     }
+                    // '''
 
-        //             echo " Checking MLflow is reachable..."
-        //             sh '''
-        //                 curl -f ${MLFLOW_TRACKING_URI} || {
-        //                     echo " MLflow is not running."
-        //                     exit 1
-        //                 }
-        //             '''
-        //         }
-        //     }
-        // }
+                    echo " Checking MLflow is reachable..."
+                    sh '''
+                        curl -f ${MLFLOW_TRACKING_URI} || {
+                            echo " MLflow is not running."
+                            exit 1
+                        }
+                    '''
+                }
+            }
+        }
 
         // stage('Ensure DAG File is Ready') {
         //     steps {
@@ -163,51 +163,55 @@ pipeline {
         //     }
         // }
         
-        // stage('Download Best Model from ML_FLOW') {
-        //     steps {
-        //         echo " Building Docker image..."
-        //         // Clean and recreate local shared dir
-        //         echo " Preparing buildshare folder..."
+        stage('Download Best Model from ML_FLOW') {
+            steps {
+                dir("${SUBDIR}") {
+                    echo " Building Docker image..."
+                    // Clean and recreate local shared dir
+                    echo " Preparing buildshare folder..."
 
-        //         sh '''
-        //         rm -rf ./build2/buildshare || true \
-        //         mkdir -p ./build2/buildshare
-        //         '''
-                
-        //         sh """
-        //         docker build --no-cache --progress=plain -f ./build2/Dockerfile.downloader -t downloader .
-        //         """
-        //         echo "Running Downloader"
-
-        //         sh """ 
-        //             docker run --rm  \
-        //             -v ./build2/buildshare:/shared \
-        //             -v /home/m_b_ashish/forecastService/mlruns:/mlruns \
-        //             -e MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
-        //             downloader
-        //         """
-                
-        //     }
-        // }
-
-        // stage('Build Forecast API Image') {
-        //     steps {
-        //         echo " Building Docker image..."
-        //         sh " docker build --no-cache --progress=plain -f ./build2/Dockerfile.final -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ."
-        //     }
-        // }
-
-        // stage('Push Image to Docker Hub') {
-        //     steps {
-                
-        //         script{
-        //             docker.withRegistry('', 'DockerHubCred') {
+                    sh '''
+                    rm -rf ./build2/buildshare || true \
+                    mkdir -p ./build2/buildshare
+                    '''
                     
-        //             sh "docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
-        //             }
-        //          }
-        //     }
-        // }
+                    sh """
+                    docker build --no-cache --progress=plain -f ./build2/Dockerfile.downloader -t downloader .
+                    """
+                    echo "Running Downloader"
+
+                    sh """ 
+                        docker run --rm  \
+                        -v ./build2/buildshare:/shared \
+                        -v /home/m_b_ashish/forecastService/mlruns:/mlruns \
+                        -e MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
+                        downloader
+                    """
+                } 
+            }
+        }
+
+        stage('Build Forecast API Image') {
+            steps {
+                dir("${SUBDIR}") {
+                echo " Building Docker image..."
+                sh " docker build --no-cache --progress=plain -f ./build2/Dockerfile.final -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ."
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                dir("${SUBDIR}") {
+                    script{
+                        docker.withRegistry('', 'DockerHubCred') {
+                        
+                        sh "docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Deploy with Ansible') {
             
