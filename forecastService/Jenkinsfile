@@ -14,7 +14,7 @@ pipeline {
         ANSIBLE_PLAYBOOK = "./ansible/deploy1.yml"
         ANSIBLE_INVENTORY = "./ansible/inventory"
 
-        GIT_REPO = "https://github.com/mbashish007/ML_OPS.git"
+        GIT_REPO = "https://github.com/nitish757/SPE-EcomSense.git"
         GIT_BRANCH = "main"
         DAG_NAME = "retail_etl"
         DAG_FILE = "./dags/retail_etl.py"
