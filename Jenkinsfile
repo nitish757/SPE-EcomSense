@@ -69,32 +69,53 @@ pipeline {
             }
         }
 
-        // STAGE 5: Deploy to Kubernetes
-stage('Deploy to Kubernetes') {
-    steps {
-        script {
-            withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-                dir('k8s') {
-                    echo "Applying namespace..."
+        stage('Start Minikube') {
+            steps {
+                sh 'minikube start --driver=docker'
+                sh 'minikube addons enable ingress'
+            }
+        }
 
-                    // Always wrap \$KUBECONFIG_FILE in quotes
-                    sh """
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f namespace.yml
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f config/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f postgres/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f inventory-service/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f product-service/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f frontend/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ingress/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
-                    """
+        stage('Wait for Cluster') {
+            steps {
+                sh 'kubectl rollout status deploy/coredns -n kube-system || true'
+                sh 'kubectl get nodes'
+        }
+        // STAGE 5: Deploy to Kubernetes
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                        dir('k8s') {
+                            echo "Applying namespace..."
+
+                            // Always wrap \$KUBECONFIG_FILE in quotes
+                            sh """
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f namespace.yml
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f config/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f postgres/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f inventory-service/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f product-service/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f frontend/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ingress/
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
+                                kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
+                            """
+                        }
+                    }
                 }
             }
         }
-    }
-}
+
+        stage('Expose Services') {
+        steps {
+            sh '''
+                # Run Minikube tunnel in background
+                pgrep -f 'minikube tunnel' || (nohup minikube tunnel > /tmp/minikube-tunnel.log 2>&1 & sleep 10)
+            '''
+            }
+        }
         // STAGE 6: Run Integration Tests (Optional)
         stage('Run Integration Tests') {
             when {
@@ -111,7 +132,7 @@ stage('Deploy to Kubernetes') {
         // STAGE 7: Clean Up Old Images
         stage('Clean Up') {
             steps {
-                sh 'docker system prune -af'
+                sh 'docker image prune -af'
             }
         }
     }
