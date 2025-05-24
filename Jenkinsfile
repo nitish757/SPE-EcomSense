@@ -11,7 +11,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_HUB_CRED = credentials('DockerHubCred') // Jenkins credential ID
+        DOCKER_HUB_CRED = credentials('DockerHub_mb') // Jenkins credential ID
         // KUBECONFIG_CRED = credentials('kubeconfig') // kubeconfig file
         NAMESPACE = 'ecomsense'
     }
@@ -85,15 +85,16 @@ stage('Deploy to Kubernetes') {
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f inventory-service/
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f product-service/
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f frontend/
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ml-service/
+                        
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f ingress/
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
-                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
+                        kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/
 
                         # Rollout restarts
                         kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment inventory-service -n ecomsense
                         kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment product-service -n ecomsense
                         kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment frontend -n ecomsense
+                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment ml-service -n ecomsense
                     """
                 }
             }
