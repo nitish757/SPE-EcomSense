@@ -124,8 +124,8 @@ stage('Deploy to Kubernetes') {
 
     post {
         success {
-            echo "✅ Deployment successful!"
-            // slackSend channel: '#deploy', message: "✅ Production deployment succeeded"
+            echo "Deployment successful!"
+            // slackSend channel: '#deploy', message: " Production deployment succeeded"
         }
         failure {
             echo "❌ Deployment failed"
