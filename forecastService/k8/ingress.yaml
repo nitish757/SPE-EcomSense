@@ -6,7 +6,8 @@ metadata:
   annotations: {}
 spec:
   rules:
-    - http:
+    - host: forecast
+      http:
         paths:
           - path: /predict
             pathType: Prefix
