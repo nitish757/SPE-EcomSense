@@ -109,11 +109,11 @@ stage('Deploy to Kubernetes') {
         // }
 
         // STAGE 7: Clean Up Old Images
-        stage('Clean Up') {
-            steps {
-                sh 'docker image prune -af'
-            }
-        }
+        // stage('Clean Up') {
+        //     steps {
+        //         sh 'docker image prune -af'
+        //     }
+        // }
     }
 
     post {
