@@ -11,7 +11,7 @@ data:
 
   INVENTORY_SERVICE_URL: "http://inventory-service:8083"
   PRODUCT_SERVICE_URL: "http://product-service:8082"
-  ML_SERVICE_URL: "http://forecast-api:8000"
+  ML_SERVICE_URL: "http://ml-service:8000"
 
   VITE_INVENTORY_API_URL: "/api/inventory"
   VITE_PRODUCT_API_URL: "/products"
