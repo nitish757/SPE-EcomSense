@@ -93,7 +93,7 @@ stage('Deploy to Kubernetes') {
                         # Rollout restarts
                         kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment inventory-service -n ecomsense
                         kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment product-service -n ecomsense
-                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment frontend-service -n ecomsense
+                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment frontend -n ecomsense
                     """
                 }
             }
