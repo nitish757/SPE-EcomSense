@@ -16,6 +16,7 @@ spec:
       containers:
       - name: frontend
         image: nitish757/frontend:5.0.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 5173
         resources:
