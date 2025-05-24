@@ -16,6 +16,7 @@ spec:
       containers:
       - name: inventory-service
         image: nitish757/inventory-service:3.0.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 8083
         resources:
