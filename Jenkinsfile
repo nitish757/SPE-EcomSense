@@ -89,6 +89,11 @@ stage('Deploy to Kubernetes') {
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-frontend.yml
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-inventory.yml
                         kubectl --kubeconfig=\"\$KUBECONFIG_FILE\" apply -f hpa/hpa-product.yml
+
+                        # Rollout restarts
+                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment inventory-service -n ecomsense
+                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment product-service -n ecomsense
+                        kubectl --kubeconfig="$KUBECONFIG_FILE" rollout restart deployment frontend-service -n ecomsense
                     """
                 }
             }
